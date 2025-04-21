@@ -1,0 +1,31 @@
+# macOS metadata
+.DS_Store
+
+# VS Code settings
+.vscode/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+
+# Test runners cache
+.pytest_cache/
+
+# Logs & temp files
+*.log
+*.tmp
+*.cache
+
+# Node/npm (if ever added)
+node_modules/
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.rar 
