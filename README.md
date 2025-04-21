@@ -133,3 +133,11 @@ rm -rf ~/.s3browser ~/.cwbrowser
 ```
 
 ---
+
+
+[License](LICENSE)
+------------------
+
+The MIT License (MIT)
+
+Copyright (c) 2013-2024 Peleg Tuchman
