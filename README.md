@@ -1,11 +1,11 @@
 # AWS CLI Browsers – S3 & CloudWatch
 
-Interactive terminal utilities powered by **fzf** for quickly browsing:
+Terminal utilities for browsing AWS resources with **fzf**:
 
-* **S3 buckets / objects** (`s3browser`)
-* **CloudWatch log groups / streams** (`cwbrowser`)
+* `s3browser` - S3 buckets & objects
+* `cwbrowser` - CloudWatch logs
 
-Both scripts wrap the AWS CLI, cache remote listings locally, and provide easy navigation using fzf.
+Wraps AWS CLI with local caching and fuzzy search.
 
 ---
 
@@ -17,6 +17,14 @@ Both scripts wrap the AWS CLI, cache remote listings locally, and provide easy n
 ---
 
 ## Installation
+
+**One-liner:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nocturnalAndroid/aws_cli_browsers/main/install-remote.sh | bash
+```
+
+**Or, manually:**
 
 ```bash
 # 1. clone the repo
@@ -35,48 +43,24 @@ $ ./install.sh
 
 ---
 
-## s3browser – features & examples
+## s3browser
 
-Launch without arguments:
-
-```bash
-$ s3browser           # list buckets
-```
-
-### Accepts an optional start path
+Usage:
 
 ```bash
-$ s3browser my-bucket                       # jump straight to bucket
-$ s3browser my-bucket/folder/prefix         # jump to prefix
-$ s3browser s3://my-bucket/folder/prefix    # jump to prefix
-$ s3browser my-bucket folder/prefix         # legacy 2‑arg form
+$ s3browser                                # start at bucket list
+$ s3browser my-bucket                      # jump straight to bucket
+$ s3browser my-bucket/folder/prefix        # jump to prefix
+$ s3browser s3://my-bucket/folder/prefix   # also works like this
+$ s3browser my-bucket folder/prefix        # or like this
 ```
-
-### Navigation keys
-
-* `↑ / ↓ / type` – move / fuzzy‑filter the list (powered by **fzf**)
-* `Enter` – open bucket, folder, or file action menu
-* `Ctrl‑C` – go back / exit
-
-### Bucket list helpers
-
-While the bucket list is open press **Include pattern** or **Exclude pattern** to run `grep` style filters.
-
-### File action menu
-
-Actions shown depend on file type (zip adds unzip options):
-
-* Open in **VSCode / Vi / Nano / Less**
-* **Cat** to stdout
-* **Copy S3 path** to clipboard (`pbcopy`)
-* **Download** (plain, open in editor, reveal in Finder)
-* **Download & unzip**
+---
 
 ### Caching
 
 * Bucket list stored in `~/.s3browser/buckets.txt`.
-* Last 20 buckets in `recent_buckets.txt` are shown on top.
-* Clear everything with:
+* Last 20 buckets in `~/.s3browser/recent_buckets.txt` are shown on top.
+* Clear cache with:
 
 ```bash
 $ s3browser --clear-cache
@@ -86,46 +70,36 @@ $ s3browser --clear-cache
 
 ## cwbrowser – features & examples
 
-Start with no args:
+Usage:
 
 ```bash
-$ cwbrowser       # list log groups
-```
-
-### Optional arguments
-
-```bash
+$ cwbrowser                                     # start at log groups list
 $ cwbrowser "/aws/lambda/my-fn"                 # jump to log group
 $ cwbrowser "/aws/lambda/my-fn" my-stream-name  # jump to stream
 $ cwbrowser --search-stream my-stream-name      # find stream in recent groups
-$ cwbrowser --clear-cache            # clear profile cache
-$ cwbrowser --clear-cache --all      # clear cache for all profiles
+$ cwbrowser --clear-cache                       # clear profile cache
+$ cwbrowser --clear-cache --all                 # clear cache for all profiles
 ```
-
-### Navigation & menus
-
-1. **Select Log Group** – recent groups (top) + all groups (size shown).
-2. **Select Log Stream** – streams sorted by last event time (timestamp shown).
-3. **Action Menu** for a stream:
-   * View logs – **Message only**, **Timestamp + Message**, **Raw JSON**
-   * Download logs – JSON, text, CSV
-   * Copy stream name to clipboard
-
 ### Caching
 
-Group list cached under `~/.cwbrowser/$AWS_PROFILE/`.  The cache refreshes in the background. Use `--clear-cache` to reset.
-
----
-
-## Tips & Tricks
-
-* Both tools respect the `AWS_PROFILE` env var.
-* Use the arrow keys or just start typing to fuzzy‑match anything.
-* Output pipes through `less` for paging where relevant.
+Group list cached under `~/.cwbrowser/$AWS_PROFILE/`.  
+The cache refreshes in the background.
+Note: Newly created log groups won't appear until the next cache refresh.
+Use `--clear-cache` to reset.
 
 ---
 
 ## Uninstall
+
+You can uninstall using any of these methods:
+
+```bash
+$ s3browser --uninstall     # run the uninstall script with confirmation
+$ cwbrowser --uninstall     # same as above
+$ awsclibrowser-uninstall   # direct uninstall script
+```
+
+Or manually:
 
 ```bash
 rm -f ~/.local/bin/{s3browser,cwbrowser}
@@ -139,5 +113,3 @@ rm -rf ~/.s3browser ~/.cwbrowser
 ------------------
 
 The MIT License (MIT)
-
-Copyright (c) 2013-2024 Peleg Tuchman

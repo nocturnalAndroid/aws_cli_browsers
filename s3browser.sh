@@ -4,6 +4,19 @@
 command -v aws >/dev/null 2>&1 || { echo "aws cli is required but not installed. Aborting." >&2; exit 1; }
 command -v fzf >/dev/null 2>&1 || { echo "fzf is required but not installed. Aborting." >&2; exit 1; }
 
+if [ "$1" = "--uninstall" ]; then
+    echo "WARNING: This will uninstall both s3browser and cwbrowser commands."
+    read -p "Do you want to continue? (y/n): " confirm
+    if [[ $confirm =~ ^[Yy]$ ]]; then
+        echo "Running uninstall script..."
+        "$HOME/.local/bin/awsclibrowser-uninstall"
+        exit 0
+    else
+        echo "Uninstall cancelled."
+        exit 1
+    fi
+fi
+
 if [ "$1" = "--clear-cache" ]; then
     echo "Clearing cache..."
     rm -rf "$HOME/.s3browser"

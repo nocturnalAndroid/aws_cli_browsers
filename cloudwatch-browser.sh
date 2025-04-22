@@ -4,6 +4,19 @@
 command -v aws >/dev/null 2>&1 || { echo "aws cli is required but not installed. Aborting." >&2; exit 1; }
 command -v fzf >/dev/null 2>&1 || { echo "fzf is required but not installed. Aborting." >&2; exit 1; }
 
+if [ "$1" = "--uninstall" ]; then
+    echo "WARNING: This will uninstall both s3browser and cwbrowser commands."
+    read -p "Do you want to continue? (y/n): " confirm
+    if [[ $confirm =~ ^[Yy]$ ]]; then
+        echo "Running uninstall script..."
+        "$HOME/.local/bin/awsclibrowser-uninstall"
+        exit 0
+    else
+        echo "Uninstall cancelled."
+        exit 1
+    fi
+fi
+
 # Get current AWS profile
 AWS_PROFILE_NAME=${AWS_PROFILE:-default}
 
@@ -62,8 +75,8 @@ mkdir -p "$CACHE_DIR"
 touch "$RECENT_GROUPS_CACHE" 2>/dev/null
 
 # Add option to search for a log stream across recent groups
-if [ "$1" = "--search-stream" ]; then
-    if [ $# -lt 2 ]; then echo "Usage: $0 --search-stream <stream_name>"; exit 1; fi
+if [ "$1" = "--search-stream" ] || [ "$1" = "-s" ]; then
+    if [ $# -lt 2 ]; then echo "Usage: $0 --search-stream|-s <stream_name>"; exit 1; fi
     search_stream="$2"
     if [ ! -s "$RECENT_GROUPS_CACHE" ]; then echo "No recent groups to search"; exit 1; fi
     while IFS= read -r grp; do
