@@ -1,0 +1,124 @@
+.TH S3BROWSER 1 "July 2024" "s3browser" "User Commands"
+
+.SH NAME
+s3browser \- Interactive S3 bucket and object browser
+
+.SH SYNOPSIS
+.B s3browser
+[\fI<bucket-name>\fR | \fIs3://<bucket-name>[/<prefix>]\fR]
+.br
+.B s3browser
+[\fB\-\-help\fR | \fB\-h\fR]
+.br
+.B s3browser
+[\fB\-\-uninstall\fR]
+.br
+.B s3browser
+[\fB\-\-clear\-cache\fR]
+
+.SH DESCRIPTION
+\fBs3browser\fR provides an interactive terminal interface for browsing AWS S3 buckets and objects using fzf. It simplifies navigation through buckets and prefixes, allowing users to perform common actions on files directly from the command line.
+
+It utilizes caching for bucket lists and maintains a list of recently accessed buckets for quicker access.
+
+.SH ARGUMENTS
+.TP
+\fI<bucket-name>\fR | \fIs3://<bucket-name>[/<prefix>]\fR
+Optionally start browsing directly within a specific bucket or prefix. Accepts either just the bucket name, or the full `s3://bucket/prefix` format.
+
+.SH OPTIONS
+.TP
+\fB\-\-help\fR, \fB\-h\fR
+Display a help message summarizing usage and options, then exit.
+.TP
+\fB\-\-uninstall\fR
+Prompts for confirmation and then runs the uninstall script located at `$HOME/.local/bin/awsclibrowser-uninstall`, removing both `s3browser` and `cwbrowser`.
+.TP
+\fB\-\-clear\-cache\fR
+Removes the cache directory located at `$HOME/.s3browser`, clearing cached bucket lists and recent bucket history.
+
+.SH INTERACTIVE USAGE
+When run without arguments, \fBs3browser\fR first displays a list of S3 buckets accessible by the configured AWS credentials and region. The list is fetched from AWS and cached. Recently accessed buckets are listed first, marked with `[RECENT]`.
+
+.SS Navigation
+.IP \(bu 2
+Use arrow keys (Up/Down) or type characters to filter the list of buckets or objects/prefixes within a bucket.
+.IP \(bu 2
+Press Enter to select a highlighted item. Selecting a bucket enters its root directory. Selecting a prefix (marked with `<DIR>`) navigates into that prefix.
+.IP \(bu 2
+Within a bucket or prefix, select '..' to navigate up one level. Selecting '..' at the bucket root returns to the bucket selection list.
+.IP \(bu 2
+Press Ctrl+C at any selection prompt to exit the current view (e.g., return to bucket list from object view) or exit the application entirely.
+.IP \(bu 2
+In the bucket or object/prefix listing, type `Include Pattern` or `Exclude Pattern` (these options appear at the top) and press Enter to filter the current view using a grep pattern.
+.IP \(bu 2
+Select `Sync Directory` to download all content from the current S3 path to a local directory using `aws s3 sync`.
+.IP \(bu 2
+Select `Copy Path` to copy the current S3 path to your clipboard.
+
+.SS File Actions
+When a file (an entry not marked with `<DIR>`) is selected, a menu of actions is presented:
+.IP \(bu 2
+\fBOpen in VSCode\fR: Streams the file content directly from S3 and opens it in Visual Studio Code (`code -`).
+.IP \(bu 2
+\fBOpen in Vi\fR: Streams the file content and opens it in `vi`.
+.IP \(bu 2
+\fBOpen in Nano\fR: Streams the file content and opens it in `nano`.
+.IP \(bu 2
+\fBOpen in Less\fR: Streams the file content and opens it in `less`.
+.IP \(bu 2
+\fBCat\fR: Streams the file content to standard output.
+.IP \(bu 2
+\fBCopy S3 path\fR: Copies the full `s3://...` path of the selected file to the system clipboard (uses `pbcopy` on macOS).
+.IP \(bu 2
+\fBDownload\fR: Prompts for a local file path (defaults to `./<filename>`) and downloads the S3 object to that path.
+.IP \(bu 2
+\fBDownload and show in Finder\fR: Downloads the file and then opens Finder to reveal the downloaded file's location (macOS only).
+.IP \(bu 2
+\fBDownload and open in VSCode\fR: Downloads the file and then opens it in Visual Studio Code.
+.IP \(bu 2
+\fBDownload and open in Vi\fR: Downloads the file and then opens it in `vi`.
+.IP \(bu 2
+\fBDownload and open in Nano\fR: Downloads the file and then opens it in `nano`.
+.IP \(bu 2
+\fBDownload and unzip\fR (Only for .zip files): Prompts for a download directory (defaults to `./`), downloads the zip file, and then extracts its contents into that directory.
+.IP \(bu 2
+\fBDownload, unzip and show in Finder\fR (Only for .zip files): Downloads, unzips, and then opens the destination directory in Finder (macOS only).
+.IP \(bu 2
+\fB..\fR: Cancels the action menu and returns to the object/prefix list.
+
+.SH CACHING
+.IP \(bu 2
+Bucket lists are cached to speed up startup. The cache is stored in `$HOME/.s3browser/buckets.txt`.
+.IP \(bu 2
+A list of recently accessed buckets is maintained at `$HOME/.s3browser/recent_buckets.txt`.
+.IP \(bu 2
+Use \fB\-\-clear\-cache\fR to remove the cache.
+
+.SH FILES
+.TP
+\fI$HOME/.s3browser/\fR
+Directory used to cache bucket lists (`buckets.txt`, `bucket_names.txt`) and recent bucket history (`recent_buckets.txt`).
+
+.SH DEPENDENCIES
+.TP
+\fBaws\fR(1)
+The AWS Command Line Interface is required for all S3 operations. It must be configured with valid credentials.
+.TP
+\fBfzf\fR(1)
+A command-line fuzzy finder is required for the interactive selection menus.
+
+.SH SEE ALSO
+.BR aws (1),
+.BR fzf (1),
+.BR cwbrowser (1),
+.BR less (1),
+.BR vi (1),
+.BR nano (1),
+.BR code (1),
+.BR unzip (1),
+.BR pbcopy (1),
+.BR open (1)
+
+.SH AUTHOR
+Written by Your Name <you@example.com> 

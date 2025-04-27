@@ -1,5 +1,41 @@
 #!/bin/bash
 
+# Function to display help message
+display_help() {
+    cat << EOF
+Usage: $(basename "$0") [<log-group-name> [<log-stream-name>]] | [--help] | [--uninstall] | [--clear-cache [--all]] | [--search-stream|-s <stream_name>]
+
+Interactively browse CloudWatch Logs groups and streams using fzf.
+
+Arguments:
+  <log-group-name>      Optional. Start browsing directly in the specified log group.
+  <log-stream-name>     Optional. If <log-group-name> is provided, start directly at this log stream.
+
+Options:
+  --help, -h            Display this help message and exit.
+  --uninstall           Uninstall the s3browser and cwbrowser tools.
+  --clear-cache [--all] Clear the cache directory (~/.cwbrowser/$AWS_PROFILE_NAME).
+                        Use --all to clear the cache for all profiles (~/.cwbrowser).
+  --search-stream, -s <stream_name>
+                        Search for <stream_name> within recent log groups and navigate directly if found.
+
+Environment Variables:
+  AWS_PROFILE           Specifies the AWS profile to use (defaults to 'default'). Caching is profile-specific.
+
+Dependencies:
+  aws cli               Required for CloudWatch Logs operations.
+  fzf                   Required for interactive navigation.
+
+Examples:
+  $(basename "$0")                               # Start browsing from the log group list.
+  $(basename "$0") /aws/lambda/my-function       # Start browsing in the specified log group.
+  $(basename "$0") /aws/lambda/my-function 2024/07/21/[$LATEST]abcdef
+                                               # Start browsing specific stream in the group.
+  $(basename "$0") -s my-specific-stream-id      # Search for 'my-specific-stream-id' in recent groups.
+EOF
+    exit 0
+}
+
 # Check if required tools are installed
 command -v aws >/dev/null 2>&1 || { echo "aws cli is required but not installed. Aborting." >&2; exit 1; }
 command -v fzf >/dev/null 2>&1 || { echo "fzf is required but not installed. Aborting." >&2; exit 1; }
@@ -15,6 +51,10 @@ if [ "$1" = "--uninstall" ]; then
         echo "Uninstall cancelled."
         exit 1
     fi
+fi
+
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    display_help
 fi
 
 # Get current AWS profile

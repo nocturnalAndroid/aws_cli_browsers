@@ -1,0 +1,114 @@
+.TH CWBROWSER 1 "July 2024" "cwbrowser" "User Commands"
+
+.SH NAME
+cwbrowser \- Interactive CloudWatch Logs browser
+
+.SH SYNOPSIS
+.B cwbrowser
+[\fI<log-group-name>\fR [\fI<log-stream-name>\fR]]
+.br
+.B cwbrowser
+[\fB\-\-help\fR | \fB\-h\fR]
+.br
+.B cwbrowser
+[\fB\-\-uninstall\fR]
+.br
+.B cwbrowser
+[\fB\-\-clear\-cache\fR [\fB\-\-all\fR]]
+.br
+.B cwbrowser
+[\fB\-\-search\-stream\fR | \fB\-s\fR] \fI<stream_name>\fR
+
+.SH DESCRIPTION
+\fBcwbrowser\fR provides an interactive terminal interface for browsing AWS CloudWatch log groups and log streams using fzf. It facilitates navigation, viewing log events in different formats, and downloading logs.
+
+It utilizes caching for log group lists to improve startup speed and maintains a list of recently accessed groups for quick navigation. It also supports searching for specific log streams across recent groups.
+
+.SH ARGUMENTS
+.TP
+\fI<log-group-name>\fR [\fI<log-stream-name>\fR]
+Optionally start browsing directly within a specific log group. If \fI<log-stream-name>\fR is also provided, it attempts to directly show actions for that specific stream within the group.
+
+.SH OPTIONS
+.TP
+\fB\-\-help\fR, \fB\-h\fR
+Display a help message summarizing usage and options, then exit.
+.TP
+\fB\-\-uninstall\fR
+Prompts for confirmation and then runs the uninstall script located at `$HOME/.local/bin/awsclibrowser-uninstall`, removing both `s3browser` and `cwbrowser`.
+.TP
+\fB\-\-clear\-cache\fR [\fB\-\-all\fR]
+Removes the cache directory for the currently active AWS profile, located at `$HOME/.cwbrowser/$AWS_PROFILE_NAME`. This clears cached log group lists and recent group history for that profile. If the \fB\-\-all\fR flag is provided, it removes the entire `$HOME/.cwbrowser` directory, clearing caches for all profiles.
+.TP
+\fB\-\-search\-stream\fR \fI<stream_name>\fR, \fB\-s\fR \fI<stream_name>\fR
+Searches for a log stream exactly matching \fI<stream_name>\fR within the log groups listed in the recent cache (`$HOME/.cwbrowser/$AWS_PROFILE_NAME/recent_groups.txt`). If found, it navigates directly to that log group and stream. If not found, it prints an error and exits.
+
+.SH INTERACTIVE USAGE
+When run without arguments, \fBcwbrowser\fR first displays a list of CloudWatch Log Groups accessible by the configured AWS credentials and region. The list is fetched from AWS or loaded from a cache. Recently accessed groups are listed first, marked with `[RECENT]`.
+
+.SS Navigation
+.IP \(bu 2
+Use arrow keys (Up/Down) or type characters to filter the list of log groups or log streams.
+.IP \(bu 2
+Press Enter to select a highlighted item. Selecting a log group displays its log streams.
+.IP \(bu 2
+In the log stream view, select '..' to return to the log group list.
+.IP \(bu 2
+Press Ctrl+C at any selection prompt to exit the current view (e.g., return to group list from stream view) or exit the application entirely.
+
+.SS Log Stream Actions
+When a log stream is selected, a menu of actions is presented:
+.IP \(bu 2
+\fBView logs (Message only)\fR: Fetches log events and displays only the message field, piped through `less`.
+.IP \(bu 2
+\fBView logs (Timestamp + Message)\fR: Fetches log events and displays the formatted timestamp and message for each, piped through `less`.
+.IP \(bu 2
+\fBView logs (Raw JSON)\fR: Fetches log events and displays the raw JSON output from the AWS CLI, piped through `less`.
+.IP \(bu 2
+\fBDownload logs as JSON\fR: Prompts for a local file path (defaults to `./<stream_name>.json`) and saves the raw JSON log event data to that file.
+.IP \(bu 2
+\fBDownload logs as Text (Message only)\fR: Prompts for a local file path (defaults to `./<stream_name>.txt`) and saves only the message field of each log event to that file.
+.IP \(bu 2
+\fBDownload logs as CSV\fR: Prompts for a local file path (defaults to `./<stream_name>.csv`) and saves the logs as a CSV file with "timestamp" and "message" columns.
+.IP \(bu 2
+\fBCopy stream name\fR: Copies the selected log stream name to the system clipboard (uses `pbcopy` on macOS).
+.IP \(bu 2
+\fB..\fR: Cancels the action menu and returns to the log stream list.
+
+.SH CACHING
+.IP \(bu 2
+Log group lists are cached per AWS profile to speed up startup. The cache is stored in `$HOME/.cwbrowser/$AWS_PROFILE_NAME/log_groups.txt`.
+.IP \(bu 2
+The cache is updated in the background after displaying the initial list. Errors during background updates are logged to `$HOME/.cwbrowser/$AWS_PROFILE_NAME/cache_errors.log`.
+.IP \(bu 2
+A list of recently accessed log groups is maintained at `$HOME/.cwbrowser/$AWS_PROFILE_NAME/recent_groups.txt`.
+.IP \(bu 2
+Use \fB\-\-clear\-cache\fR to remove the cache for the current profile or \fB\-\-clear\-cache \-\-all\fR for all profiles.
+
+.SH FILES
+.TP
+\fI$HOME/.cwbrowser/$AWS_PROFILE_NAME/\fR
+Directory used to cache log group lists (`log_groups.txt`, `group_names.txt`), recent group history (`recent_groups.txt`), and cache update errors (`cache_errors.log`) for the specified AWS profile.
+
+.SH ENVIRONMENT
+.TP
+\fBAWS_PROFILE\fR
+If set, specifies the AWS named profile to use for credentials and configuration. If unset, the 'default' profile is used. The cache is segregated based on this profile name.
+
+.SH DEPENDENCIES
+.TP
+\fBaws\fR(1)
+The AWS Command Line Interface is required for all CloudWatch Logs operations. It must be configured with valid credentials.
+.TP
+\fBfzf\fR(1)
+A command-line fuzzy finder is required for the interactive selection menus.
+
+.SH SEE ALSO
+.BR aws (1),
+.BR fzf (1),
+.BR s3browser (1),
+.BR date (1),
+.BR less (1)
+
+.SH AUTHOR
+Written by Your Name <you@example.com> 

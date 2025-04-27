@@ -1,5 +1,8 @@
 # AWS CLI Browsers – S3 & CloudWatch
 
+> **Note:** Most of the code and documentation in this project was generated with the assistance of AI tools.
+
+
 Terminal utilities for browsing AWS resources with **fzf**:
 
 * `s3browser` - S3 buckets & objects
@@ -54,6 +57,9 @@ $ s3browser my-bucket/folder/prefix        # jump to prefix
 $ s3browser s3://my-bucket/folder/prefix   # also works like this
 $ s3browser my-bucket folder/prefix        # or like this
 ```
+
+In the interfase navigate using the arrow keys + return key / mouse / start typing for fuzzy search
+
 ---
 
 ### Caching
@@ -80,6 +86,9 @@ $ cwbrowser --search-stream my-stream-name      # find stream in recent groups
 $ cwbrowser --clear-cache                       # clear profile cache
 $ cwbrowser --clear-cache --all                 # clear cache for all profiles
 ```
+
+In the interfase navigate using the arrow keys + return key / mouse / start typing for fuzzy search
+
 ### Caching
 
 Group list cached under `~/.cwbrowser/$AWS_PROFILE/`.  

@@ -1,5 +1,41 @@
 #!/bin/bash
 
+# Function to display help message
+display_help() {
+    cat << EOF
+Usage: $(basename "$0") [s3://<bucket>[/<prefix>]] | [--help] | [--uninstall] | [--clear-cache]
+
+Interactively browse S3 buckets and objects using fzf.
+
+Arguments:
+  s3://<bucket>[/<prefix>]  Optional. Start browsing directly at the specified S3 bucket and prefix.
+                           If only a bucket name is given (without s3:// or /), it's treated as the starting bucket.
+
+Options:
+  --help, -h          Display this help message and exit.
+  --uninstall         Uninstall the s3browser and cwbrowser tools.
+  --clear-cache       Clear the cache directory (~/.s3browser).
+
+Directory Options:
+  Include Pattern     Filter the current view with a grep pattern.
+  Exclude Pattern     Filter out entries with a grep pattern.
+  Sync Directory      Download all content from current S3 path to a local directory.
+  Copy Path           Copy the current S3 path to clipboard.
+
+Dependencies:
+  aws cli             Required for S3 operations.
+  fzf                 Required for interactive navigation.
+
+Examples:
+  $(basename "$0")                     # Start browsing from the bucket list.
+  $(basename "$0") my-bucket             # Start browsing in 'my-bucket'.
+  $(basename "$0") s3://my-bucket       # Start browsing in 'my-bucket'.
+  $(basename "$0") my-bucket/logs/      # Start browsing in 'my-bucket' at the 'logs/' prefix.
+  $(basename "$0") s3://my-bucket/logs/ # Start browsing in 'my-bucket' at the 'logs/' prefix.
+EOF
+    exit 0
+}
+
 # Check if required tools are installed
 command -v aws >/dev/null 2>&1 || { echo "aws cli is required but not installed. Aborting." >&2; exit 1; }
 command -v fzf >/dev/null 2>&1 || { echo "fzf is required but not installed. Aborting." >&2; exit 1; }
@@ -15,6 +51,10 @@ if [ "$1" = "--uninstall" ]; then
         echo "Uninstall cancelled."
         exit 1
     fi
+fi
+
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    display_help
 fi
 
 if [ "$1" = "--clear-cache" ]; then
@@ -147,12 +187,7 @@ handle_file_action() {
     # Handle selected action
     case "$action" in
         "Open in VSCode")
-            # Create a temporary named pipe and stream content to it
-            tmp_pipe="/tmp/${filename}.pipe"
-            mkfifo "$tmp_pipe"
-            aws s3 cp "$filepath" "$tmp_pipe" &
-            code "$tmp_pipe"
-            rm "$tmp_pipe"
+            aws s3 cp "$filepath" - | code -
             exit 0
             ;;
         "Open in Vi")
@@ -253,13 +288,13 @@ while true; do
         # Display recent buckets first, then all buckets
         tmp_buckets=$(printf "%b\n%s" "$recent_with_details" "$all_buckets")
         while true; do
-            bucket_line=$(printf "Include pattern\nExclude pattern\n%s" "$tmp_buckets" | fzf --header="Select a bucket (Ctrl+C to exit):")
+            bucket_line=$(printf "Include Pattern\nExclude Pattern\n%s" "$tmp_buckets" | fzf --bind "load:select+up+select+up" --header="Select a bucket (Ctrl+C to exit):")
             [ -z "$bucket_line" ] && break 2
-            if [ "$bucket_line" = "Include pattern" ]; then
+            if [ "$bucket_line" = "Include Pattern" ]; then
                 read -e -p "Include grep pattern: " pattern
                 tmp_buckets=$(printf "%s\n" "$tmp_buckets" | grep -E "$pattern")
                 continue
-            elif [ "$bucket_line" = "Exclude pattern" ]; then
+            elif [ "$bucket_line" = "Exclude Pattern" ]; then
                 read -e -p "Exclude grep pattern: " pattern
                 tmp_buckets=$(printf "%s\n" "$tmp_buckets" | grep -Ev "$pattern")
                 continue
@@ -281,17 +316,27 @@ while true; do
     while true; do
         if [ -z "$split_start_prefix" ]; then
             # List objects in current path
-            tmp_objects=$(list_objects "$current_path")
+            tmp_objects=$(list_objects "$current_path" | tac)
             while true; do
-                selection_line=$(printf "Include pattern\nExclude pattern\n%s" "$tmp_objects" | fzf --header="Current path: $current_path (Ctrl+C to go to bucket selection)")
+                selection_line=$(printf "Include Pattern\nExclude Pattern\nSync Directory\nCopy Path\n%s" "$tmp_objects" | fzf --bind "start:select+up+select+up+select+up+select+up+select+up" --header="Current path: $current_path (Ctrl+C to go to bucket selection)")
                 [ -z "$selection_line" ] && break 2
-                if [ "$selection_line" = "Include pattern" ]; then
+                if [ "$selection_line" = "Include Pattern" ]; then
                     read -e -p "Include grep pattern: " pattern
                     tmp_objects=$(printf "%s\n" "$tmp_objects" | grep -E "$pattern")
                     continue
-                elif [ "$selection_line" = "Exclude pattern" ]; then
+                elif [ "$selection_line" = "Exclude Pattern" ]; then
                     read -e -p "Exclude grep pattern: " pattern
                     tmp_objects=$(printf "%s\n" "$tmp_objects" | grep -Ev "$pattern")
+                    continue
+                elif [ "$selection_line" = "Sync Directory" ]; then
+                    read -e -p "Local directory path [default: ./]: " local_dir
+                    local_dir=${local_dir:-"./"}
+                    echo "Syncing $current_path/ to $local_dir"
+                    aws s3 sync "$current_path/" "$local_dir"
+                    continue
+                elif [ "$selection_line" = "Copy Path" ]; then
+                    echo "$current_path" | pbcopy
+                    echo "Path copied to clipboard: $current_path"
                     continue
                 fi
                 break
